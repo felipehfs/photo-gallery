@@ -95,6 +95,7 @@ func GetPhotos() http.Handler {
 	})
 }
 
+/// FindPhoto
 func FindPhoto() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		conn, err := middleware.ExtractSession(r)
@@ -113,5 +114,40 @@ func FindPhoto() http.Handler {
 
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(photo)
+	})
+}
+
+func DropPhoto() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		conn, err := middleware.ExtractSession(r)
+		if err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+
+		param := mux.Vars(r)
+
+		dao := model.PhotoDao{DB: conn}
+
+		photo, err := dao.FindByID(param["id"])
+
+		if err != nil {
+			http.Error(w, err.Error(), 404)
+			return
+		}
+
+		err = os.Remove(STATIC_DIR + "/" + photo.Filename)
+
+		if err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+
+		if err := dao.Remove(param["id"]); err != nil {
+			http.Error(w, err.Error(), 404)
+			return
+		}
+
+		w.WriteHeader(http.StatusCreated)
 	})
 }

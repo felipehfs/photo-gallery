@@ -15,6 +15,7 @@ func main() {
 	router.Handle("/api/photos", controller.InsertPhoto()).Methods("POST")
 	router.Handle("/api/photos", controller.GetPhotos()).Methods("GET")
 	router.Handle("/api/photos/{id}", controller.FindPhoto()).Methods("GET")
+	router.Handle("/api/photos/{id}", controller.DropPhoto()).Methods("DELETE")
 	fs := http.StripPrefix("/static/", http.FileServer(http.Dir(controller.STATIC_DIR)))
 	router.PathPrefix("/static/").Handler(fs)
 
