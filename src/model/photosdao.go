@@ -28,3 +28,18 @@ func (pd *PhotoDao) Read() ([]Photo, error) {
 	}
 	return photos, nil
 }
+
+// FindByID retrieve the photo by ID
+func (pd *PhotoDao) FindByID(id string) (*Photo, error) {
+	var photo Photo
+	err := pd.getCollection().Find(bson.M{"id": bson.ObjectIdHex(id)}).One(&photo)
+	if err != nil {
+		return nil, err
+	}
+	return &photo, nil
+}
+
+// Remove drop the photo by ID and returns a error
+func (pd *PhotoDao) Remove(id string) error {
+	return pd.getCollection().Remove(bson.M{"id": bson.ObjectIdHex(id)})
+}

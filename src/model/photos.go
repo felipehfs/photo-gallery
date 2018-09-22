@@ -8,9 +8,9 @@ import (
 
 // Photo represents the pictures on the disk
 type Photo struct {
-	ID      bson.ObjectId `json:"id,omitempty" bson:"id,omitempty"`
-	Title   string        `json:"title"`
-	URL     string        `json:"url,omitempty"`
-	Likes   uint          `json:"likes"`
-	Created time.Time     `json:"created"`
+	ID       bson.ObjectId `json:"id,omitempty" bson:"id,omitempty"`
+	Title    string        `json:"title"`
+	Filename string        `json:"filename,omitempty"`
+	Likes    uint          `json:"likes"`
+	Created  time.Time     `json:"created"`
 }

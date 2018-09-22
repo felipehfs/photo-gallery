@@ -9,6 +9,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/gorilla/mux"
+
 	"gopkg.in/mgo.v2/bson"
 
 	"github.com/photosgallery/src/middleware"
@@ -29,14 +31,14 @@ func InsertPhoto() http.Handler {
 		photo.Title = r.FormValue("title")
 		photo.Likes = 0
 		photo.Created = time.Now()
-		dest, err := uploadFile(r, "picture", STATIC_DIR)
+		name, err := uploadFile(r, "picture", STATIC_DIR)
 
 		if err != nil {
 			http.Error(w, err.Error(), 500)
 			return
 		}
 
-		photo.URL = dest
+		photo.Filename = name
 
 		conn, err := middleware.ExtractSession(r)
 		if err != nil {
@@ -54,6 +56,8 @@ func InsertPhoto() http.Handler {
 	})
 }
 
+// uploadFile upload the file and returns the
+// filename if success
 func uploadFile(r *http.Request, field, dirname string) (string, error) {
 	file, handler, err := r.FormFile(field)
 	defer file.Close()
@@ -68,5 +72,46 @@ func uploadFile(r *http.Request, field, dirname string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return filename, nil
+	return handler.Filename, nil
+}
+
+// GetPhotos retrieves all photos in the database
+func GetPhotos() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		conn, err := middleware.ExtractSession(r)
+		if err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+		dao := model.PhotoDao{DB: conn}
+		photos, err := dao.Read()
+		if err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(photos)
+	})
+}
+
+func FindPhoto() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		conn, err := middleware.ExtractSession(r)
+		if err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+		params := mux.Vars(r)
+		dao := model.PhotoDao{DB: conn}
+		photo, err := dao.FindByID(params["id"])
+
+		if err != nil {
+			http.Error(w, err.Error(), 404)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(photo)
+	})
 }
