@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"time"
@@ -25,22 +24,27 @@ const (
 func InsertPhoto() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		r.ParseMultipartForm(320 << 20)
-		var photo model.Photo
+		photo := model.Photo{}
 
 		photo.ID = bson.NewObjectIdWithTime(time.Now())
 		photo.Title = r.FormValue("title")
 		photo.Likes = 0
 		photo.Created = time.Now()
-		name, err := uploadFile(r, "picture", STATIC_DIR)
 
+		conn, err := middleware.ExtractSession(r)
 		if err != nil {
 			http.Error(w, err.Error(), 500)
 			return
 		}
 
-		photo.Filename = name
+		file, handler, err := r.FormFile("filename")
+		filename := fmt.Sprintf("%v/%v", "/tmp/", handler.Filename)
+		photo.Filename = handler.Filename
+		defer file.Close()
+		dest, _ := os.Create(filename)
+		defer dest.Close()
+		io.Copy(dest, file)
 
-		conn, err := middleware.ExtractSession(r)
 		if err != nil {
 			http.Error(w, err.Error(), 500)
 			return
@@ -54,25 +58,6 @@ func InsertPhoto() http.Handler {
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(photo)
 	})
-}
-
-// uploadFile upload the file and returns the
-// filename if success
-func uploadFile(r *http.Request, field, dirname string) (string, error) {
-	file, handler, err := r.FormFile(field)
-	defer file.Close()
-	if err != nil {
-		return "", err
-	}
-	log.Println(handler.Filename)
-	filename := fmt.Sprintf("%v/%v", dirname, handler.Filename)
-	dest, err := os.Create(filename)
-	io.Copy(dest, file)
-	defer dest.Close()
-	if err != nil {
-		return "", err
-	}
-	return handler.Filename, nil
 }
 
 // GetPhotos retrieves all photos in the database

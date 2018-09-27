@@ -11,6 +11,7 @@ import (
 
 func main() {
 	router := mux.NewRouter().StrictSlash(true)
+	adapt := middleware.Adapt(router, middleware.Cors, middleware.WithDB)
 
 	router.Handle("/api/photos", controller.InsertPhoto()).Methods("POST")
 	router.Handle("/api/photos", controller.GetPhotos()).Methods("GET")
@@ -19,6 +20,5 @@ func main() {
 	fs := http.StripPrefix("/static/", http.FileServer(http.Dir(controller.STATIC_DIR)))
 	router.PathPrefix("/static/").Handler(fs)
 
-	adapt := middleware.Adapt(router, middleware.Cors, middleware.WithDB)
 	http.ListenAndServe(":8080", adapt)
 }
