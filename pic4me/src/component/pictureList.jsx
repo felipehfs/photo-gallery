@@ -3,7 +3,7 @@ import PictureItem from './pictureItem'
 const URI = "http://localhost:8080/static/"
 
 export default props => {
-    if (props.lista.length  > 0){
+    if (props.lista){
         return (
                 <div className="row">
                     {

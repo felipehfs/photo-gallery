@@ -31,6 +31,9 @@ export default class Gallery extends React.Component {
 
     onSubmit(e) {
         e.preventDefault()
+        if(this.state.filename === "" || this.state.title === "") {
+            return
+        }
         const formdata = new FormData()
         formdata.append("title", this.state.title)
         formdata.append("filename", this.state.filename, this.state.filename.name)
@@ -44,7 +47,10 @@ export default class Gallery extends React.Component {
             this.setState({...this.state, filename: "", title: ""})
             document.getElementById("picture").value = ""
             this.refresh()
-        }).catch(e => console.log(e))
+        }).catch(e => {
+            console.log(e)
+            this.setState({...this.state, filename: "", title: ""})
+        })
     }
 
     render() {
